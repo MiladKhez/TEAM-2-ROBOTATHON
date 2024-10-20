@@ -73,7 +73,7 @@ void setup() {
 	ESP32PWM::allocateTimer(3);
 
     // TODO: Write your setup code here
-     I2C_0.begin (I2C_SDA, I2C_SDA, I2C_FREQ);
+    I2C_0.begin (I2C_SDA, I2C_SDA, I2C_FREQ);
     sensor.setInterruptPin(APDS9960_INT);
     sensor.begin();
     Serial.begin(115200);
@@ -92,6 +92,18 @@ void loop() {
     }
 
     // TODO: Write your periodic code here
+    while(!sensor.colorAvailable()) {
+        delay(5);
+    }
 
+    int r, g, b, a;
+    sensor.readColor (r, g, b, a);
+
+    Serial.print("r = ");
+    Serial.print(r);
+    Serial.print("g = ");
+    Serial.print(g);
+    Serial.print("b = ");
+    Serial.print(b);
     vTaskDelay(1);
 }
