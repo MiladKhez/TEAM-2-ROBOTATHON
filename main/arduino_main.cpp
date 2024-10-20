@@ -26,6 +26,16 @@ limitations under the License.
 #include <ESP32SharpIR.h>
 #include <QTRSensors.h>
 
+//Attempt at Color Sensor
+#define APDS9960_INT 0
+#define I2C_SDA 21
+#define I2C_SCL 22
+#define I2C_FREQ 100000
+
+TwoWire I2C_0 = TwoWire(0);
+APDS9960 sensor = APDS9960(I2C_0, APDS9960_INT);
+//end define
+
 GamepadPtr myGamepads[BP32_MAX_GAMEPADS];
 
 // This callback gets called any time a new gamepad is connected.
@@ -63,6 +73,10 @@ void setup() {
 	ESP32PWM::allocateTimer(3);
 
     // TODO: Write your setup code here
+     I2C_0.begin (I2C_SDA, I2C_SDA, I2C_FREQ);
+    sensor.setInterruptPin(APDS9960_INT);
+    sensor.begin();
+    Serial.begin(115200);
 }
 
 // Arduino loop function. Runs in CPU 1
