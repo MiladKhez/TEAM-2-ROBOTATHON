@@ -21,6 +21,7 @@ limitations under the License.
 
 #include <Arduino.h>
 #include <Bluepad32.h>
+#include <Arduino_APDS9960.h>
 
 #include <ESP32Servo.h>
 #include <ESP32SharpIR.h>
@@ -73,7 +74,7 @@ void setup() {
 	ESP32PWM::allocateTimer(3);
 
     // TODO: Write your setup code here
-    I2C_0.begin (I2C_SDA, I2C_SDA, I2C_FREQ);
+    I2C_0.begin (I2C_SDA, I2C_SCL, I2C_FREQ);
     sensor.setInterruptPin(APDS9960_INT);
     sensor.begin();
     Serial.begin(115200);
@@ -97,13 +98,25 @@ void loop() {
     }
 
     int r, g, b, a;
-    sensor.readColor (r, g, b, a);
+    sensor.readColor(r, g, b, a);
 
-    Serial.print("r = ");
-    Serial.print(r);
-    Serial.print("g = ");
-    Serial.print(g);
-    Serial.print("b = ");
-    Serial.print(b);
+    Serial.print("r = " + r);
+    //Serial.print(r);
+    Serial.print("g = " + g);
+    //Serial.print(g);
+    Serial.print("b = " + b);
+    //Serial.print(b);
+
+    if(r > b && r > g)
+    {
+        Serial.print("Color is red.");
+    } else if(g > r && g > b) {
+        Serial.print("Color is green.");
+    } else if(b > r && b > g) {
+        Serial.print("Color is blue.");
+    } else {
+        Serial.print("color is a mix :)");
+    }
+
     vTaskDelay(1);
 }
