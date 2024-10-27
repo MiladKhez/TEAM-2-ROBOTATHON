@@ -17,7 +17,7 @@ limitations under the License.
 #include "sdkconfig.h"
 #ifndef CONFIG_BLUEPAD32_PLATFORM_ARDUINO
 #error "Must only be compiled when using Bluepad32 Arduino platform"
-#endif  // !CONFIG_BLUEPAD32_PLATFORM_ARDUINO
+#endif // !CONFIG_BLUEPAD32_PLATFORM_ARDUINO
 
 #include <Arduino.h>
 #include <Bluepad32.h>
@@ -27,7 +27,7 @@ limitations under the License.
 #include <ESP32SharpIR.h>
 #include <QTRSensors.h>
 
-//Attempt at Color Sensor
+// Color Sensor
 #define APDS9960_INT 0
 #define I2C_SDA 21
 #define I2C_SCL 22
@@ -35,15 +35,17 @@ limitations under the License.
 
 TwoWire I2C_0 = TwoWire(0);
 APDS9960 sensor = APDS9960(I2C_0, APDS9960_INT);
-//end define
 
 GamepadPtr myGamepads[BP32_MAX_GAMEPADS];
 
 // This callback gets called any time a new gamepad is connected.
-void onConnectedGamepad(GamepadPtr gp) {
+void onConnectedGamepad(GamepadPtr gp)
+{
     bool foundEmptySlot = false;
-    for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
-        if (myGamepads[i] == nullptr) {
+    for (int i = 0; i < BP32_MAX_GAMEPADS; i++)
+    {
+        if (myGamepads[i] == nullptr)
+        {
             myGamepads[i] = gp;
             foundEmptySlot = true;
             break;
@@ -51,10 +53,13 @@ void onConnectedGamepad(GamepadPtr gp) {
     }
 }
 
-void onDisconnectedGamepad(GamepadPtr gp) {
+void onDisconnectedGamepad(GamepadPtr gp)
+{
     bool foundGamepad = false;
-    for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
-        if (myGamepads[i] == gp) {
+    for (int i = 0; i < BP32_MAX_GAMEPADS; i++)
+    {
+        if (myGamepads[i] == gp)
+        {
             myGamepads[i] = nullptr;
             foundGamepad = true;
             break;
@@ -63,60 +68,67 @@ void onDisconnectedGamepad(GamepadPtr gp) {
 }
 
 // Arduino setup function. Runs in CPU 1
-void setup() {
+void setup()
+{
     // Setup the Bluepad32 callbacks
     BP32.setup(&onConnectedGamepad, &onDisconnectedGamepad);
     BP32.forgetBluetoothKeys();
 
     ESP32PWM::allocateTimer(0);
-	ESP32PWM::allocateTimer(1);
-	ESP32PWM::allocateTimer(2);
-	ESP32PWM::allocateTimer(3);
+    ESP32PWM::allocateTimer(1);
+    ESP32PWM::allocateTimer(2);
+    ESP32PWM::allocateTimer(3);
 
     // TODO: Write your setup code here
-    I2C_0.begin (I2C_SDA, I2C_SCL, I2C_FREQ);
+    I2C_0.begin(I2C_SDA, I2C_SCL, I2C_FREQ);
     sensor.setInterruptPin(APDS9960_INT);
     sensor.begin();
+
     Serial.begin(115200);
 }
 
 // Arduino loop function. Runs in CPU 1
-void loop() {
+void loop()
+{
     BP32.update();
 
-    for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
+    for (int i = 0; i < BP32_MAX_GAMEPADS; i++)
+    {
         GamepadPtr myGamepad = myGamepads[i];
-        if (myGamepad && myGamepad->isConnected()) {
+        if (myGamepad && myGamepad->isConnected())
+        {
             // TODO: Write your controller code here
-
         }
     }
 
     // TODO: Write your periodic code here
-    while(!sensor.colorAvailable()) {
+    while (!sensor.colorAvailable())
+    {
         delay(5);
     }
 
     int r, g, b, a;
     sensor.readColor(r, g, b, a);
 
-    Serial.print("r = " + r);
-    //Serial.print(r);
-    Serial.print("g = " + g);
-    //Serial.print(g);
-    Serial.print("b = " + b);
-    //Serial.print(b);
+    Serial.print("RED: ");
+    Serial.println(r);
+    Serial.print("GREEN: ");
+    Serial.println(g);
+    Serial.print("BLUE: ");
+    Serial.println(b);
+    Serial.print("AMBIENT: ");
+    Serial.println(a);
 
-    if(r > b && r > g)
-    {
-        Serial.print("Color is red.");
-    } else if(g > r && g > b) {
-        Serial.print("Color is green.");
-    } else if(b > r && b > g) {
-        Serial.print("Color is blue.");
-    } else {
-        Serial.print("color is a mix :)");
-    }
+    // if(r > b && r > g)
+    // {
+    //     Serial.println("Color is red.");
+    // } else if(g > r && g > b) {
+    //     Serial.println("Color is green.");
+    // } else if(b > r && b > g) {
+    //     Serial.println("Color is blue.");
+    // } else {
+    //     Serial.println("Color is a mix :)");
+    // }
 
     vTaskDelay(1);
 }
