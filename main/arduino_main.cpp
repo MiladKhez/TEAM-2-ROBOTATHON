@@ -89,6 +89,12 @@ void setup()
     Serial.begin(115200);
 
     pinMode(2, OUTPUT);
+
+    pinMode(13, OUTPUT);
+    pinMode(12, OUTPUT);
+    pinMode(14, OUTPUT);
+    pinMode(27, OUTPUT);
+    pinMode(26, OUTPUT);
 }
 
 // Arduino loop function. Runs in CPU 1
@@ -103,6 +109,8 @@ void loop()
         {
             
             //TODO: Write your controller code here
+
+            // COLOR SENSING CODE BEGINS HERE (BUTTON A COLLECTS GOAL COLOR AND BUTTON B DETECTS IF COLOR MATCHES)
             bool A = myGamepad->b();
             // Serial.print(B);
             if(A)
@@ -181,11 +189,42 @@ void loop()
                             delay(500);
                         }
                     }
-
-                //    delay(500);
-                //}
                 // END BUTTON B PRESS
             }
+            // END COLOR SENSOR CODE
+
+
+            // MOVEMENT CODE BEGINS HERE (PIN 13 is both motors on or off, 12/14/27/26 control their state)
+            int X = myGamepad->axisX();
+            int Y = myGamepad->axisY();
+            if(Y < -50)
+            {
+                //turn both motors on to move forward
+                digitalWrite(13, 1);
+                digitalWrite(12, 0);
+                digitalWrite(26, 0);
+                digitalWrite(14, 1);
+                digitalWrite(27, 1);
+            } else if (Y > 50) {
+                //turn both motors on backward
+                digitalWrite(13, 1);
+                digitalWrite(12, 1);
+                digitalWrite(26, 1);
+                digitalWrite(14, 0);
+                digitalWrite(27, 0);
+            } else { 
+                //don't move
+                digitalWrite(13,0);
+            }
+            // if(X > 50)
+            // {
+            //     //turn left motor on faster than the right one (to turn right)
+            //     digitalWrite(13, 1);
+            // } else if (X < -50)
+            // {
+            //     //turn right motor on faster than the left one (to turn left)
+            //     digitalWrite(13, 1);
+            // }
         }
     }
 
