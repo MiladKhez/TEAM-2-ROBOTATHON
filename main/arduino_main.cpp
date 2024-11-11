@@ -38,6 +38,8 @@ APDS9960 sensor = APDS9960(I2C_0, APDS9960_INT);
 
 GamepadPtr myGamepads[BP32_MAX_GAMEPADS];
 
+int r, g, b, a, colorOne, colorTwo;
+
 // This callback gets called any time a new gamepad is connected.
 void onConnectedGamepad(GamepadPtr gp)
 {
@@ -85,6 +87,8 @@ void setup()
     sensor.begin();
 
     Serial.begin(115200);
+
+    pinMode(2, OUTPUT);
 }
 
 // Arduino loop function. Runs in CPU 1
@@ -97,7 +101,91 @@ void loop()
         GamepadPtr myGamepad = myGamepads[i];
         if (myGamepad && myGamepad->isConnected())
         {
-            // TODO: Write your controller code here
+            
+            //TODO: Write your controller code here
+            bool A = myGamepad->b();
+            // Serial.print(B);
+            if(A)
+            {
+                //ON BUTTON A PRESSED
+                sensor.readColor(r, g, b, a);
+
+                Serial.print("RED: ");
+                Serial.println(r);
+                Serial.print("GREEN: ");
+                Serial.println(g);
+                Serial.print("BLUE: ");
+                Serial.println(b);
+                Serial.print("AMBIENT: ");
+                Serial.println(a);
+
+                if(r > b && r > g)
+                {
+                    Serial.println("Color is red.");
+                    colorOne = 1;
+                } else if(g > r && g > b) {
+                    Serial.println("Color is green.");
+                    colorOne = 2;
+                } else if(b > r && b > g) {
+                    Serial.println("Color is blue.");
+                    colorOne = 3;
+                } else {
+                    Serial.println("Hmmm...");
+                }
+                // END BUTTON A PRESS
+                delay (1000);
+            }
+
+            bool B = myGamepad->a();
+            if(B)
+            {
+                // ON BUTTON B PRESS
+                bool foundSame = false;
+                //while(foundSame == false) {
+                    int r2, g2, b2, a2;
+                    sensor.readColor(r2, g2, b2, a2);
+
+                    Serial.print("CHECK RED: ");
+                    Serial.println(r2);
+                    Serial.print("CHECK GREEN: ");
+                    Serial.println(g2);
+                    Serial.print("CHECK BLUE: ");
+                    Serial.println(b2);
+                    Serial.print("CHECK AMBIENT: ");
+                    Serial.println(a2);
+
+                    if(r2 > b2 && r2 > g2)
+                    {
+                        Serial.println("I am detecting... red.");
+                        colorTwo = 1;
+                    } else if(g2 > r2 && g2 > b2) {
+                        Serial.println("I am detecting... green.");
+                        colorTwo = 2;
+                    } else if(b2 > r2 && b2 > g2) {
+                        Serial.println("I am detecting... blue.");
+                        colorTwo = 3;
+                    } else {
+                        Serial.println("Hmmm...");
+                    }
+
+                    if(colorOne == colorTwo)
+                    {
+                        Serial.print("Same color.");
+                        foundSame = true;
+                        delay(500);
+                        for(int i = 0; i < 4; i++)
+                        {
+                            digitalWrite(2, 1);
+                            delay(500);
+                            digitalWrite(2, 0);
+                            delay(500);
+                        }
+                    }
+
+                //    delay(500);
+                //}
+                // END BUTTON B PRESS
+            }
         }
     }
 
@@ -106,29 +194,6 @@ void loop()
     {
         delay(5);
     }
-
-    int r, g, b, a;
-    sensor.readColor(r, g, b, a);
-
-    Serial.print("RED: ");
-    Serial.println(r);
-    Serial.print("GREEN: ");
-    Serial.println(g);
-    Serial.print("BLUE: ");
-    Serial.println(b);
-    Serial.print("AMBIENT: ");
-    Serial.println(a);
-
-    // if(r > b && r > g)
-    // {
-    //     Serial.println("Color is red.");
-    // } else if(g > r && g > b) {
-    //     Serial.println("Color is green.");
-    // } else if(b > r && b > g) {
-    //     Serial.println("Color is blue.");
-    // } else {
-    //     Serial.println("Color is a mix :)");
-    // }
 
     vTaskDelay(1);
 }
