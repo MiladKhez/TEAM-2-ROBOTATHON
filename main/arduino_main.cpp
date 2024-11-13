@@ -91,6 +91,8 @@ void setup()
     pinMode(2, OUTPUT);
 
     pinMode(13, OUTPUT);
+    pinMode(25, OUTPUT);
+
     pinMode(12, OUTPUT);
     pinMode(14, OUTPUT);
     pinMode(27, OUTPUT);
@@ -194,37 +196,66 @@ void loop()
             // END COLOR SENSOR CODE
 
 
-            // MOVEMENT CODE BEGINS HERE (PIN 13 is both motors on or off, 12/14/27/26 control their state)
+            // MOVEMENT CODE BEGINS HERE (PIN 13 is ENA, PIN 25 is ENB, 12/14/27/26 control their state)
             int X = myGamepad->axisX();
             int Y = myGamepad->axisY();
+            Serial.print("X = ");
+            Serial.println(X);
+            Serial.print("Y = ");
+            Serial.println(Y);
+            delay(100);
+            if(X > 50)
+            {
+                //turn left motor on faster than the right one (to turn right)
+                analogWrite(13,100);
+                analogWrite(25,255);
+
+                digitalWrite(12, 0);
+                digitalWrite(26, 0);
+                digitalWrite(14, 1);
+                digitalWrite(27, 1);
+
+            } else if (X < -50)
+            {
+                //turn right motor on faster than the left one (to turn left)
+                analogWrite(13, 255);
+                analogWrite(25,100);
+
+                digitalWrite(12, 0);
+                digitalWrite(26, 0);
+                digitalWrite(14, 1);
+                digitalWrite(27, 1);
+
+            } else {
+                analogWrite(13, 0);
+                analogWrite(25, 0);
+            }
+            
             if(Y < -50)
             {
                 //turn both motors on to move forward
-                digitalWrite(13, 1);
+                analogWrite(13, 255);
+                analogWrite(25, 255);
+
                 digitalWrite(12, 0);
                 digitalWrite(26, 0);
                 digitalWrite(14, 1);
                 digitalWrite(27, 1);
             } else if (Y > 50) {
                 //turn both motors on backward
-                digitalWrite(13, 1);
+                analogWrite(13, 255);
+                analogWrite(25, 255);
+
                 digitalWrite(12, 1);
                 digitalWrite(26, 1);
                 digitalWrite(14, 0);
                 digitalWrite(27, 0);
             } else { 
                 //don't move
-                digitalWrite(13,0);
+                analogWrite(13,0);
+                analogWrite(25,0);
             }
-            // if(X > 50)
-            // {
-            //     //turn left motor on faster than the right one (to turn right)
-            //     digitalWrite(13, 1);
-            // } else if (X < -50)
-            // {
-            //     //turn right motor on faster than the left one (to turn left)
-            //     digitalWrite(13, 1);
-            // }
+            
         }
     }
 
