@@ -38,6 +38,9 @@ APDS9960 sensor = APDS9960(I2C_0, APDS9960_INT);
 
 GamepadPtr myGamepads[BP32_MAX_GAMEPADS];
 
+QTRSensors qtr;
+uint16_t sensors[4];
+
 int r, g, b, a, colorOne, colorTwo;
 
 // This callback gets called any time a new gamepad is connected.
@@ -97,6 +100,10 @@ void setup()
     pinMode(14, OUTPUT);
     pinMode(27, OUTPUT);
     pinMode(26, OUTPUT);
+
+    qtr.setTypeAnalog();
+    qtr.setSensorPins((const uint8_t[]) {33,32,15,2},2); //DOES THIS NEED TO BE UPDATED TO 4????
+    // calibration will be a button in the loop()
 }
 
 // Arduino loop function. Runs in CPU 1
@@ -199,13 +206,30 @@ void loop()
             // MOVEMENT CODE BEGINS HERE (PIN 13 is ENA, PIN 25 is ENB, 12/14/27/26 control their state)
             int X = myGamepad->axisX();
             int Y = myGamepad->axisY();
-            Serial.print("X = ");
-            Serial.println(X);
-            Serial.print("Y = ");
-            Serial.println(Y);
-            delay(100);
-            if(X > 50)
-            {
+            // Serial.print("X = ");
+            // Serial.println(X);
+            // Serial.print("Y = ");
+            // Serial.println(Y);
+            // delay(100);
+            if(Y < -50) {
+                //turn both motors on to move forward
+                analogWrite(13, 255);
+                analogWrite(25, 255);
+
+                digitalWrite(12, 0);
+                digitalWrite(26, 0);
+                digitalWrite(14, 1);
+                digitalWrite(27, 1);
+            } else if (Y > 50) {
+                //turn both motors on backward
+                analogWrite(13, 255);
+                analogWrite(25, 255);
+
+                digitalWrite(12, 1);
+                digitalWrite(26, 1);
+                digitalWrite(14, 0);
+                digitalWrite(27, 0);
+            } else if(X > 50) {
                 //turn left motor on faster than the right one (to turn right)
                 analogWrite(13,100);
                 analogWrite(25,255);
@@ -226,36 +250,72 @@ void loop()
                 digitalWrite(14, 1);
                 digitalWrite(27, 1);
 
-            } else {
-                analogWrite(13, 0);
-                analogWrite(25, 0);
-            }
-            
-            if(Y < -50)
-            {
-                //turn both motors on to move forward
-                analogWrite(13, 255);
-                analogWrite(25, 255);
-
-                digitalWrite(12, 0);
-                digitalWrite(26, 0);
-                digitalWrite(14, 1);
-                digitalWrite(27, 1);
-            } else if (Y > 50) {
-                //turn both motors on backward
-                analogWrite(13, 255);
-                analogWrite(25, 255);
-
-                digitalWrite(12, 1);
-                digitalWrite(26, 1);
-                digitalWrite(14, 0);
-                digitalWrite(27, 0);
             } else { 
                 //don't move
                 analogWrite(13,0);
                 analogWrite(25,0);
             }
-            
+            // END MOVEMENT CODE
+
+
+            // BEGIN LINE SENSOR CODE
+                // have a calibration button then a line follow button
+            bool L1 = myGamepad->l1();
+            bool L2 = myGamepad->l2();
+            if(L1) // calibration
+            {
+                for(uint8_t i = 0; i <250; i++)
+                Serial.println("Calibrating...");
+                qtr.calibrate();
+                delay(4);
+            }
+            if(L2) // follow the line
+            {
+                int where = qtr.readLineBlack(sensors);
+                if(where > 6000) // on right sensors (left side of robot), so turn left a bit
+                {
+                    analogWrite(13,75);
+                    analogWrite(25,50);
+
+                    digitalWrite(12, 0);
+                    digitalWrite(26, 0);
+                    digitalWrite(14, 1);
+                    digitalWrite(27, 1);
+
+                    delay(100);
+
+                    analogWrite(13,0);
+                    analogWrite(25,0);
+                } else if(where < 2500) { // on left sensors (right side of robot), so turn right a bit
+                    analogWrite(13,50);
+                    analogWrite(25,75);
+
+                    digitalWrite(12, 0);
+                    digitalWrite(26, 0);
+                    digitalWrite(14, 1);
+                    digitalWrite(27, 1);
+
+                    delay(100);
+
+                    analogWrite(13,0);
+                    analogWrite(25,0);
+                } else { // keep going straight
+                    analogWrite(13, 50);
+                    analogWrite(25, 50);
+
+                    digitalWrite(12, 0);
+                    digitalWrite(26, 0);
+                    digitalWrite(14, 1);
+                    digitalWrite(27, 1);
+
+                    delay(100);
+
+                    analogWrite(13,0);
+                    analogWrite(25,0);
+                }
+
+            }
+            // END LINE SENSOR CODE
         }
     }
 
