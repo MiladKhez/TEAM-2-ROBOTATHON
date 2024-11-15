@@ -102,7 +102,7 @@ void setup()
     pinMode(26, OUTPUT);
 
     qtr.setTypeAnalog();
-    qtr.setSensorPins((const uint8_t[]) {33,32,15,2},2); //DOES THIS NEED TO BE UPDATED TO 4????
+    qtr.setSensorPins((const uint8_t[]) {33,32,4,15,0},5);
     // calibration will be a button in the loop()
 }
 
@@ -118,10 +118,10 @@ void loop()
         {
             
             //TODO: Write your controller code here
-
+            Serial.print("controller connected...");
             // COLOR SENSING CODE BEGINS HERE (BUTTON A COLLECTS GOAL COLOR AND BUTTON B DETECTS IF COLOR MATCHES)
             bool A = myGamepad->b();
-            // Serial.print(B);
+            // Serial.print(A);
             if(A)
             {
                 //ON BUTTON A PRESSED
@@ -154,6 +154,7 @@ void loop()
             }
 
             bool B = myGamepad->a();
+
             if(B)
             {
                 // ON BUTTON B PRESS
@@ -206,11 +207,11 @@ void loop()
             // MOVEMENT CODE BEGINS HERE (PIN 13 is ENA, PIN 25 is ENB, 12/14/27/26 control their state)
             int X = myGamepad->axisX();
             int Y = myGamepad->axisY();
-            // Serial.print("X = ");
-            // Serial.println(X);
-            // Serial.print("Y = ");
-            // Serial.println(Y);
-            // delay(100);
+            Serial.print("X = ");
+            Serial.println(X);
+            Serial.print("Y = ");
+            Serial.println(Y);
+            delay(100);
             if(Y < -50) {
                 //turn both motors on to move forward
                 analogWrite(13, 255);
@@ -265,14 +266,16 @@ void loop()
             if(L1) // calibration
             {
                 for(uint8_t i = 0; i <250; i++)
-                Serial.println("Calibrating...");
-                qtr.calibrate();
-                delay(4);
+                {
+                    Serial.println("Calibrating...");
+                    qtr.calibrate();
+                    delay(4);
+                }
             }
             if(L2) // follow the line
             {
                 int where = qtr.readLineBlack(sensors);
-                if(where > 6000) // on right sensors (left side of robot), so turn left a bit
+                if(where > 5000) // on right sensors (left side of robot), so turn left a bit
                 {
                     analogWrite(13,75);
                     analogWrite(25,50);
@@ -281,12 +284,7 @@ void loop()
                     digitalWrite(26, 0);
                     digitalWrite(14, 1);
                     digitalWrite(27, 1);
-
-                    delay(100);
-
-                    analogWrite(13,0);
-                    analogWrite(25,0);
-                } else if(where < 2500) { // on left sensors (right side of robot), so turn right a bit
+                } else if(where < 3000) { // on left sensors (right side of robot), so turn right a bit
                     analogWrite(13,50);
                     analogWrite(25,75);
 
@@ -294,11 +292,6 @@ void loop()
                     digitalWrite(26, 0);
                     digitalWrite(14, 1);
                     digitalWrite(27, 1);
-
-                    delay(100);
-
-                    analogWrite(13,0);
-                    analogWrite(25,0);
                 } else { // keep going straight
                     analogWrite(13, 50);
                     analogWrite(25, 50);
@@ -307,15 +300,20 @@ void loop()
                     digitalWrite(26, 0);
                     digitalWrite(14, 1);
                     digitalWrite(27, 1);
-
-                    delay(100);
-
-                    analogWrite(13,0);
-                    analogWrite(25,0);
                 }
 
             }
             // END LINE SENSOR CODE
+
+
+            // BEGIN WALL SENSOR CODE
+
+            // END WALL SENSOR CODE
+
+
+            // BEGIN INTAKE SERVO CODE
+
+            // END INTAKE SERVO CODE
         }
     }
 
