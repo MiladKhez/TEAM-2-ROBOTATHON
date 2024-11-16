@@ -27,6 +27,11 @@ limitations under the License.
 #include <ESP32SharpIR.h>
 #include <QTRSensors.h>
 
+//SERVO
+Servo myServo;
+int pos = 1;
+
+
 // Color Sensor
 #define APDS9960_INT 0
 #define I2C_SDA 21
@@ -306,6 +311,9 @@ void distance_sensor_run()
 // Arduino setup function. Runs in CPU 1
 void setup()
 {
+//SERVO SETUP
+        myServo.attach(15);
+
     // Setup the Bluepad32 callbacks
     BP32.setup(&onConnectedGamepad, &onDisconnectedGamepad);
     BP32.forgetBluetoothKeys();
@@ -378,6 +386,27 @@ void loop()
             }
             // END COLOR SENSOR CODE
 
+//Servo Intake Code
+     // Servo CODE BEGINS HERE (PIN 35)
+            int RY = myGamepad->axisY();
+            Serial.print("RY = ");
+            Serial.println(RY);
+            delay(100);
+            if(RY < -50) {
+                //turn servo output
+                myServo.writeMicroseconds(1000);
+            } else if (RY > 50) {
+                //turn servo intake
+                myServo.writeMicroseconds(2000);
+            }
+
+
+            } else {
+                //don't move
+                myServo.writeMicroseconds(1500);
+            }
+   
+            // END Servo CODE
 
             // MOVEMENT CODE BEGINS HERE (PIN 13 is ENA, PIN 25 is ENB, 12/14/27/26 control their state)
             int X = myGamepad->axisX();
