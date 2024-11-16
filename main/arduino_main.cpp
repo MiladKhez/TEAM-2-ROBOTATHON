@@ -76,6 +76,164 @@ void onDisconnectedGamepad(GamepadPtr gp)
     }
 }
 
+void color_sensor_read(){
+    //ON BUTTON A PRESSED
+    sensor.readColor(r, g, b, a);
+
+    Serial.print("RED: ");
+    Serial.println(r);
+    Serial.print("GREEN: ");
+    Serial.println(g);
+    Serial.print("BLUE: ");
+    Serial.println(b);
+    Serial.print("AMBIENT: ");
+    Serial.println(a);
+
+    if(r > b && r > g)
+    {
+        Serial.println("Color is red.");
+        colorOne = 1;
+    } else if(g > r && g > b) {
+        Serial.println("Color is green.");
+        colorOne = 2;
+    } else if(b > r && b > g) {
+        Serial.println("Color is blue.");
+        colorOne = 3;
+    } else {
+        Serial.println("Hmmm...");
+    }
+    // END BUTTON A PRESS
+    delay (1000);
+}
+
+void color_sensor_check() 
+{
+    // ON BUTTON B PRESS
+    int r2, g2, b2, a2;
+    sensor.readColor(r2, g2, b2, a2);
+
+    Serial.print("CHECK RED: ");
+    Serial.println(r2);
+    Serial.print("CHECK GREEN: ");
+    Serial.println(g2);
+    Serial.print("CHECK BLUE: ");
+    Serial.println(b2);
+    Serial.print("CHECK AMBIENT: ");
+    Serial.println(a2);
+
+    if(r2 > b2 && r2 > g2)
+    {
+        Serial.println("I am detecting... red.");
+        colorTwo = 1;
+    } else if(g2 > r2 && g2 > b2) {
+        Serial.println("I am detecting... green.");
+        colorTwo = 2;
+    } else if(b2 > r2 && b2 > g2) {
+        Serial.println("I am detecting... blue.");
+        colorTwo = 3;
+    } else {
+        Serial.println("Hmmm...");
+    }
+
+    if(colorOne == colorTwo)
+    {
+        analogWrite(13, 0);
+        analogWrite(25, 0);
+        Serial.print("Same color.");
+        delay(500);
+        for(int i = 0; i < 4; i++)
+        {
+            digitalWrite(2, 1);
+            delay(500);
+            digitalWrite(2, 0);
+            delay(500);
+        }
+    } else {
+        analogWrite(13, 150);
+        analogWrite(25, 150);
+        digitalWrite(12, 0);
+        digitalWrite(26, 0);
+        digitalWrite(14, 1);
+        digitalWrite(27, 1);
+    }
+    // END BUTTON B PRESS
+}
+
+void line_sensor_calibration()
+{
+    for(uint8_t i = 0; i <250; i++)
+    {
+        Serial.println("Calibrating...");
+        qtr.calibrate();
+        delay(4);
+    }
+}
+
+void line_sensor_follow()
+{
+    Serial.print("yButton has been pressed");
+    int where = qtr.readLineBlack(sensors);
+    if(where > 5000) // on right sensors (left side of robot), so turn left a bit
+    {
+        analogWrite(13,200);
+        analogWrite(25,100);
+
+        digitalWrite(12, 0);
+        digitalWrite(26, 0);
+        digitalWrite(14, 1);
+        digitalWrite(27, 1);
+    } else if(where < 3000) { // on left sensors (right side of robot), so turn right a bit
+        analogWrite(13,100);
+        analogWrite(25,200);
+
+        digitalWrite(12, 0);
+        digitalWrite(26, 0);
+        digitalWrite(14, 1);
+        digitalWrite(27, 1);
+    } else { // keep going straight
+        analogWrite(13, 100);
+        analogWrite(25, 100);
+
+        digitalWrite(12, 0);
+        digitalWrite(26, 0);
+        digitalWrite(14, 1);
+        digitalWrite(27, 1);
+    }
+}
+
+void distance_sensor_run()
+{
+    float disFront = frontDistanceSensor.getDistanceFloat();
+    float disLeft = leftDistanceSensor.getDistanceFloat();
+    float disRight = rightDistanceSensor.getDistanceFloat();
+
+    if(disRight > 5)
+    {
+        // turn right
+    } else if(disFront < 5 && disRight < 5) {
+        // back up then turn left
+        analogWrite(13, 255);
+        analogWrite(25, 255);
+
+        digitalWrite(12, 1);
+        digitalWrite(26, 1);
+        digitalWrite(14, 0);
+        digitalWrite(27, 0);
+
+        delay(1000);
+
+        analogWrite(13, 255);
+        analogWrite(25,100);
+
+        digitalWrite(12, 0);
+        digitalWrite(26, 0);
+        digitalWrite(14, 1);
+        digitalWrite(27, 1);
+    } else {
+        // go forward
+    }
+}
+
 // Arduino setup function. Runs in CPU 1
 void setup()
 {
@@ -112,7 +270,6 @@ void setup()
     frontDistanceSensor.setFilterRate(1.0f);
     leftDistanceSensor.setFilterRate(1.0f);
     rightDistanceSensor.setFilterRate(1.0f);
-
 }
 
 // Arduino loop function. Runs in CPU 1
@@ -125,95 +282,27 @@ void loop()
         GamepadPtr myGamepad = myGamepads[i];
         if (myGamepad && myGamepad->isConnected())
         {
-            
             //TODO: Write your controller code here
             Serial.print("controller connected...");
+
             // COLOR SENSING CODE BEGINS HERE (BUTTON A COLLECTS GOAL COLOR AND BUTTON B DETECTS IF COLOR MATCHES)
+            while (!sensor.colorAvailable())
+            {
+                delay(5);
+                Serial.print("no color available...");
+            }
+
             bool A = myGamepad->b();
             // Serial.print(A);
             if(A)
             {
-                //ON BUTTON A PRESSED
-                sensor.readColor(r, g, b, a);
-
-                Serial.print("RED: ");
-                Serial.println(r);
-                Serial.print("GREEN: ");
-                Serial.println(g);
-                Serial.print("BLUE: ");
-                Serial.println(b);
-                Serial.print("AMBIENT: ");
-                Serial.println(a);
-
-                if(r > b && r > g)
-                {
-                    Serial.println("Color is red.");
-                    colorOne = 1;
-                } else if(g > r && g > b) {
-                    Serial.println("Color is green.");
-                    colorOne = 2;
-                } else if(b > r && b > g) {
-                    Serial.println("Color is blue.");
-                    colorOne = 3;
-                } else {
-                    Serial.println("Hmmm...");
-                }
-                // END BUTTON A PRESS
-                delay (1000);
+               color_sensor_read(); 
             }
 
             bool B = myGamepad->a();
-
             if(B)
             {
-                // ON BUTTON B PRESS
-                bool foundSame = false;
-                //while(foundSame == false) {
-                    int r2, g2, b2, a2;
-                    sensor.readColor(r2, g2, b2, a2);
-
-                    Serial.print("CHECK RED: ");
-                    Serial.println(r2);
-                    Serial.print("CHECK GREEN: ");
-                    Serial.println(g2);
-                    Serial.print("CHECK BLUE: ");
-                    Serial.println(b2);
-                    Serial.print("CHECK AMBIENT: ");
-                    Serial.println(a2);
-
-                    if(r2 > b2 && r2 > g2)
-                    {
-                        Serial.println("I am detecting... red.");
-                        colorTwo = 1;
-                    } else if(g2 > r2 && g2 > b2) {
-                        Serial.println("I am detecting... green.");
-                        colorTwo = 2;
-                    } else if(b2 > r2 && b2 > g2) {
-                        Serial.println("I am detecting... blue.");
-                        colorTwo = 3;
-                    } else {
-                        Serial.println("Hmmm...");
-                    }
-
-                    if(colorOne == colorTwo)
-                    {
-                        analogWrite(13, 0);
-                        analogWrite(25, 0);
-                        Serial.print("Same color.");
-                        foundSame = true;
-                        delay(500);
-                        for(int i = 0; i < 4; i++)
-                        {
-                            digitalWrite(2, 1);
-                            delay(500);
-                            digitalWrite(2, 0);
-                            delay(500);
-                        }
-                    } else {
-                        analogWrite(13, 90);
-                        analogWrite(25, 90);
-                    }
-                // END BUTTON B PRESS
+                color_sensor_check();
             }
             // END COLOR SENSOR CODE
 
@@ -277,44 +366,11 @@ void loop()
             bool yButton = myGamepad->y();
             if(xButton) // calibration
             {
-                for(uint8_t i = 0; i <250; i++)
-                {
-                    Serial.println("Calibrating...");
-                    qtr.calibrate();
-                    delay(4);
-                }
+                line_sensor_calibration();
             }
             if(yButton) // follow the line
             {
-                Serial.print("yButton has been pressed");
-                int where = qtr.readLineBlack(sensors);
-                if(where > 5000) // on right sensors (left side of robot), so turn left a bit
-                {
-                    analogWrite(13,200);
-                    analogWrite(25,100);
-
-                    digitalWrite(12, 0);
-                    digitalWrite(26, 0);
-                    digitalWrite(14, 1);
-                    digitalWrite(27, 1);
-                } else if(where < 3000) { // on left sensors (right side of robot), so turn right a bit
-                    analogWrite(13,100);
-                    analogWrite(25,200);
-
-                    digitalWrite(12, 0);
-                    digitalWrite(26, 0);
-                    digitalWrite(14, 1);
-                    digitalWrite(27, 1);
-                } else { // keep going straight
-                    analogWrite(13, 100);
-                    analogWrite(25, 100);
-
-                    digitalWrite(12, 0);
-                    digitalWrite(26, 0);
-                    digitalWrite(14, 1);
-                    digitalWrite(27, 1);
-                }
-
+                line_sensor_follow();
             }
             // END LINE SENSOR CODE
 
@@ -323,41 +379,20 @@ void loop()
             bool leftShoulder = myGamepad->l1();
             if(leftShoulder)
             {
-                float disFront = frontDistanceSensor.getDistanceFloat();
-                float disLeft = leftDistanceSensor.getDistanceFloat();
-                float disRight = rightDistanceSensor.getDistanceFloat();
-
-                if(disFront < 10)
-                {
-                    if(disLeft < 10)
-                    {
-
-                    }
-                } else {
-                    // go forward
-                    analogWrite(13, 100);
-                    analogWrite(25, 100);
-
-                    digitalWrite(12, 0);
-                    digitalWrite(26, 0);
-                    digitalWrite(14, 1);
-                    digitalWrite(27, 1);
-                }
+                distance_sensor_run();
             }
+        }
             // END DISTANCE SENSOR CODE
 
 
             // BEGIN INTAKE SERVO CODE
 
             // END INTAKE SERVO CODE
-        }
-    }
 
     // TODO: Write your periodic code here
-    while (!sensor.colorAvailable())
-    {
-        delay(5);
-    }
+
 
     vTaskDelay(1);
+
+    }
 }
