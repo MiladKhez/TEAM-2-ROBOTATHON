@@ -39,7 +39,7 @@ APDS9960 sensor = APDS9960(I2C_0, APDS9960_INT);
 GamepadPtr myGamepads[BP32_MAX_GAMEPADS];
 
 QTRSensors qtr;
-uint16_t sensors[4];
+uint16_t sensors[5];
 
 int r, g, b, a, colorOne, colorTwo;
 
@@ -165,32 +165,7 @@ void line_sensor_calibration()
     {
         Serial.println("Calibrating...");
         qtr.calibrate();
-        delay(4);
-    }
-}
-
-void line_sensor_follow()
-{
-    Serial.print("yButton has been pressed");
-    int where = qtr.readLineBlack(sensors);
-    if(where > 5000) // on right sensors (left side of robot), so turn left a bit
-    {
-        analogWrite(13,200);
-        analogWrite(25,100);
-
-        digitalWrite(12, 0);
-        digitalWrite(26, 0);
-        digitalWrite(14, 1);
-        digitalWrite(27, 1);
-    } else if(where < 3000) { // on left sensors (right side of robot), so turn right a bit
-        analogWrite(13,100);
-        analogWrite(25,200);
-
-        digitalWrite(12, 0);
-        digitalWrite(26, 0);
-        digitalWrite(14, 1);
-        digitalWrite(27, 1);
-    } else { // keep going straight
+        
         analogWrite(13, 100);
         analogWrite(25, 100);
 
@@ -198,7 +173,74 @@ void line_sensor_follow()
         digitalWrite(26, 0);
         digitalWrite(14, 1);
         digitalWrite(27, 1);
+
+        delay(20);
+
+        analogWrite(13, 100);
+        analogWrite(25, 100);
+
+        digitalWrite(12, 1);
+        digitalWrite(26, 1);
+        digitalWrite(14, 0);
+        digitalWrite(27, 0);
+
+        delay(20);
     }
+    analogWrite(13, 0);
+    analogWrite(25, 0);
+}
+
+void line_sensor_follow()
+{
+    // Serial.println("yButton has been pressed");
+    int where = qtr.readLineBlack(sensors);
+    Serial.print("line sensor value: ");
+    Serial.println(where);
+    
+    uint16_t s0 = sensors[0];
+    uint16_t s1 = sensors[1];
+    uint16_t s2 = sensors[2];
+    uint16_t s3 = sensors[3];
+    uint16_t s4 = sensors[4];
+
+    Serial.print("Sensor 1: "); Serial.println(sensors[0]);
+    Serial.print("Sensor 2: "); Serial.println(sensors[1]);
+    Serial.print("Sensor 3: "); Serial.println(sensors[2]);
+    Serial.print("Sensor 4: "); Serial.println(sensors[3]);
+    Serial.print("Sensor 5: "); Serial.println(sensors[4]);
+    
+    if((s0 > 700) || (s1 > 700)) // turn right
+    {
+        
+        analogWrite(13,80);
+        analogWrite(25,90);
+
+        digitalWrite(12, 0);
+        digitalWrite(26, 0);
+        digitalWrite(14, 1);
+        digitalWrite(27, 1);
+        //Serial.println("turn right");
+    } else if((s2 > 700) || (s3 > 700) || (s4 > 700)) { // turn left
+        analogWrite(13,100);
+        analogWrite(25,90);
+
+        digitalWrite(12, 0);
+        digitalWrite(26, 0);
+        digitalWrite(14, 1);
+        digitalWrite(27, 1);
+        //Serial.println("turn left");
+    } else if(s2 == 0)
+    {
+        // reverse
+        analogWrite(13, 80);
+        analogWrite(25, 80);
+
+        digitalWrite(12, 1);
+        digitalWrite(26, 1);
+        digitalWrite(14, 0);
+        digitalWrite(27, 0);
+    }
+    delay(50);
 }
 
 void distance_sensor_run()
@@ -207,30 +249,57 @@ void distance_sensor_run()
     float disLeft = leftDistanceSensor.getDistanceFloat();
     float disRight = rightDistanceSensor.getDistanceFloat();
 
-    if(disRight > 5)
+    if(disFront < 15)
     {
-        // turn right
-    } else if(disFront < 5 && disRight < 5) {
-        // back up then turn left
-        analogWrite(13, 255);
-        analogWrite(25, 255);
+        if(disRight > 15)
+        {
+            // turn right (back up then turn right)
+            analogWrite(13, 100);
+            analogWrite(25, 100);
 
-        digitalWrite(12, 1);
-        digitalWrite(26, 1);
-        digitalWrite(14, 0);
-        digitalWrite(27, 0);
+            digitalWrite(12, 1);
+            digitalWrite(26, 1);
+            digitalWrite(14, 0);
+            digitalWrite(27, 0);
 
-        delay(1000);
+            delay(200);
 
-        analogWrite(13, 255);
-        analogWrite(25,100);
+            analogWrite(13,80);
+            analogWrite(25,255);
+
+            digitalWrite(12, 0);
+            digitalWrite(26, 0);
+            digitalWrite(14, 1);
+            digitalWrite(27, 1);
+        } else {
+            // turn left (back up then turn left)
+            analogWrite(13, 100);
+            analogWrite(25, 100);
+
+            digitalWrite(12, 1);
+            digitalWrite(26, 1);
+            digitalWrite(14, 0);
+            digitalWrite(27, 0);
+
+            delay(200);
+
+            analogWrite(13, 255);
+            analogWrite(25,80);
+
+            digitalWrite(12, 0);
+            digitalWrite(26, 0);
+            digitalWrite(14, 1);
+            digitalWrite(27, 1);
+        }
+    } else {
+        // go forward
+        analogWrite(13, 100);
+        analogWrite(25, 100);
 
         digitalWrite(12, 0);
         digitalWrite(26, 0);
         digitalWrite(14, 1);
         digitalWrite(27, 1);
-    } else {
-        // go forward
     }
 }
 
@@ -264,7 +333,7 @@ void setup()
     pinMode(26, OUTPUT);
 
     qtr.setTypeAnalog();
-    qtr.setSensorPins((const uint8_t[]) {33,32,4,15,0},5);
+    qtr.setSensorPins((const uint8_t[]) {33, 32, 15, 35, 4}, 5);    // Removed 0 
     // calibration will be a button in the loop()
 
     frontDistanceSensor.setFilterRate(1.0f);
@@ -276,6 +345,9 @@ void setup()
 void loop()
 {
     BP32.update();
+
+    // line_sensor_calibration();
+    // while(1) { line_sensor_follow(); }
 
     for (int i = 0; i < BP32_MAX_GAMEPADS; i++)
     {
@@ -390,7 +462,6 @@ void loop()
             // END INTAKE SERVO CODE
 
     // TODO: Write your periodic code here
-
 
     vTaskDelay(1);
 
