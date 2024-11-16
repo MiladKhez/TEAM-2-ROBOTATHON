@@ -49,7 +49,7 @@ uint16_t sensors[5];
 int r, g, b, a, colorOne, colorTwo;
 
 ESP32SharpIR frontDistanceSensor(ESP32SharpIR::GP2Y0A21YK0F, 39);
-ESP32SharpIR leftDistanceSensor(ESP32SharpIR::GP2Y0A21YK0F, 36);
+// ESP32SharpIR leftDistanceSensor(ESP32SharpIR::GP2Y0A21YK0F, 36);
 ESP32SharpIR rightDistanceSensor(ESP32SharpIR::GP2Y0A21YK0F, 34); 
 
 // This callback gets called any time a new gamepad is connected.
@@ -251,7 +251,7 @@ void line_sensor_follow()
 void distance_sensor_run()
 {
     float disFront = frontDistanceSensor.getDistanceFloat();
-    float disLeft = leftDistanceSensor.getDistanceFloat();
+    // float disLeft = leftDistanceSensor.getDistanceFloat();
     float disRight = rightDistanceSensor.getDistanceFloat();
 
     if(disFront < 15)
@@ -341,11 +341,11 @@ void setup()
     pinMode(26, OUTPUT);
 
     qtr.setTypeAnalog();
-    qtr.setSensorPins((const uint8_t[]) {33, 32, 15, 35, 4}, 5);    // Removed 0 
+    qtr.setSensorPins((const uint8_t[]) {33, 32, 36, 35, 4}, 5);    // Removed 0 
     // calibration will be a button in the loop()
 
     frontDistanceSensor.setFilterRate(1.0f);
-    leftDistanceSensor.setFilterRate(1.0f);
+    //leftDistanceSensor.setFilterRate(1.0f);
     rightDistanceSensor.setFilterRate(1.0f);
 }
 
@@ -388,7 +388,7 @@ void loop()
 
 //Servo Intake Code
      // Servo CODE BEGINS HERE (PIN 35)
-            int RY = myGamepad->axisY();
+            int RY = myGamepad->axisRY();
             Serial.print("RY = ");
             Serial.println(RY);
             delay(100);
@@ -398,9 +398,6 @@ void loop()
             } else if (RY > 50) {
                 //turn servo intake
                 myServo.writeMicroseconds(2000);
-            }
-
-
             } else {
                 //don't move
                 myServo.writeMicroseconds(1500);
@@ -484,11 +481,6 @@ void loop()
             }
         }
             // END DISTANCE SENSOR CODE
-
-
-            // BEGIN INTAKE SERVO CODE
-
-            // END INTAKE SERVO CODE
 
     // TODO: Write your periodic code here
 
