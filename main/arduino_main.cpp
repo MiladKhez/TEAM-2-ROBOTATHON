@@ -43,6 +43,10 @@ uint16_t sensors[4];
 
 int r, g, b, a, colorOne, colorTwo;
 
+ESP32SharpIR frontDistanceSensor(ESP32SharpIR::GP2Y0A21YK0F, 39);
+ESP32SharpIR leftDistanceSensor(ESP32SharpIR::GP2Y0A21YK0F, 36);
+ESP32SharpIR rightDistanceSensor(ESP32SharpIR::GP2Y0A21YK0F, 34); 
+
 // This callback gets called any time a new gamepad is connected.
 void onConnectedGamepad(GamepadPtr gp)
 {
@@ -104,6 +108,11 @@ void setup()
     qtr.setTypeAnalog();
     qtr.setSensorPins((const uint8_t[]) {33,32,4,15,0},5);
     // calibration will be a button in the loop()
+
+    frontDistanceSensor.setFilterRate(1.0f);
+    leftDistanceSensor.setFilterRate(1.0f);
+    rightDistanceSensor.setFilterRate(1.0f);
+
 }
 
 // Arduino loop function. Runs in CPU 1
@@ -188,6 +197,8 @@ void loop()
 
                     if(colorOne == colorTwo)
                     {
+                        analogWrite(13, 0);
+                        analogWrite(25, 0);
                         Serial.print("Same color.");
                         foundSame = true;
                         delay(500);
@@ -198,6 +209,9 @@ void loop()
                             digitalWrite(2, 0);
                             delay(500);
                         }
+                    } else {
+                        analogWrite(13, 90);
+                        analogWrite(25, 90);
                     }
                 // END BUTTON B PRESS
             }
@@ -239,7 +253,6 @@ void loop()
                 digitalWrite(26, 0);
                 digitalWrite(14, 1);
                 digitalWrite(27, 1);
-
             } else if (X < -50)
             {
                 //turn right motor on faster than the left one (to turn left)
@@ -250,7 +263,6 @@ void loop()
                 digitalWrite(26, 0);
                 digitalWrite(14, 1);
                 digitalWrite(27, 1);
-
             } else { 
                 //don't move
                 analogWrite(13,0);
@@ -261,9 +273,9 @@ void loop()
 
             // BEGIN LINE SENSOR CODE
                 // have a calibration button then a line follow button
-            bool L1 = myGamepad->l1();
-            bool L2 = myGamepad->l2();
-            if(L1) // calibration
+            bool xButton = myGamepad->x();
+            bool yButton = myGamepad->y();
+            if(xButton) // calibration
             {
                 for(uint8_t i = 0; i <250; i++)
                 {
@@ -272,29 +284,30 @@ void loop()
                     delay(4);
                 }
             }
-            if(L2) // follow the line
+            if(yButton) // follow the line
             {
+                Serial.print("yButton has been pressed");
                 int where = qtr.readLineBlack(sensors);
                 if(where > 5000) // on right sensors (left side of robot), so turn left a bit
                 {
-                    analogWrite(13,75);
-                    analogWrite(25,50);
+                    analogWrite(13,200);
+                    analogWrite(25,100);
 
                     digitalWrite(12, 0);
                     digitalWrite(26, 0);
                     digitalWrite(14, 1);
                     digitalWrite(27, 1);
                 } else if(where < 3000) { // on left sensors (right side of robot), so turn right a bit
-                    analogWrite(13,50);
-                    analogWrite(25,75);
+                    analogWrite(13,100);
+                    analogWrite(25,200);
 
                     digitalWrite(12, 0);
                     digitalWrite(26, 0);
                     digitalWrite(14, 1);
                     digitalWrite(27, 1);
                 } else { // keep going straight
-                    analogWrite(13, 50);
-                    analogWrite(25, 50);
+                    analogWrite(13, 100);
+                    analogWrite(25, 100);
 
                     digitalWrite(12, 0);
                     digitalWrite(26, 0);
@@ -306,9 +319,32 @@ void loop()
             // END LINE SENSOR CODE
 
 
-            // BEGIN WALL SENSOR CODE
+            // BEGIN DISTANCE SENSOR CODE
+            bool leftShoulder = myGamepad->l1();
+            if(leftShoulder)
+            {
+                float disFront = frontDistanceSensor.getDistanceFloat();
+                float disLeft = leftDistanceSensor.getDistanceFloat();
+                float disRight = rightDistanceSensor.getDistanceFloat();
 
-            // END WALL SENSOR CODE
+                if(disFront < 10)
+                {
+                    if(disLeft < 10)
+                    {
+
+                    }
+                } else {
+                    // go forward
+                    analogWrite(13, 100);
+                    analogWrite(25, 100);
+
+                    digitalWrite(12, 0);
+                    digitalWrite(26, 0);
+                    digitalWrite(14, 1);
+                    digitalWrite(27, 1);
+                }
+            }
+            // END DISTANCE SENSOR CODE
 
 
             // BEGIN INTAKE SERVO CODE
