@@ -108,7 +108,6 @@ void color_sensor_read(){
         Serial.println("Hmmm...");
     }
     // END BUTTON A PRESS
-    delay (1000);
 }
 
 void color_sensor_check() 
@@ -217,8 +216,8 @@ void line_sensor_follow()
     if((s0 > 700) || (s1 > 700)) // turn right
     {
         
-        analogWrite(13,80);
-        analogWrite(25,90);
+        analogWrite(13,70);
+        analogWrite(25,80);
 
         digitalWrite(12, 0);
         digitalWrite(26, 0);
@@ -226,8 +225,8 @@ void line_sensor_follow()
         digitalWrite(27, 1);
         //Serial.println("turn right");
     } else if((s2 > 700) || (s3 > 700) || (s4 > 700)) { // turn left
-        analogWrite(13,100);
-        analogWrite(25,90);
+        analogWrite(13,80);
+        analogWrite(25,70);
 
         digitalWrite(12, 0);
         digitalWrite(26, 0);
@@ -256,7 +255,7 @@ void distance_sensor_run()
 
     if(disFront < 15)
     {
-        if(disRight > 15)
+        if(disRight > 10)
         {
             // turn right (back up then turn right)
             analogWrite(13, 100);
@@ -267,19 +266,21 @@ void distance_sensor_run()
             digitalWrite(14, 0);
             digitalWrite(27, 0);
 
-            delay(200);
+            delay(400);
 
             analogWrite(13,80);
-            analogWrite(25,255);
+            analogWrite(25,200);
 
             digitalWrite(12, 0);
             digitalWrite(26, 0);
             digitalWrite(14, 1);
             digitalWrite(27, 1);
+
+            delay(400);
         } else {
             // turn left (back up then turn left)
-            analogWrite(13, 100);
-            analogWrite(25, 100);
+            analogWrite(13, 80);
+            analogWrite(25, 80);
 
             digitalWrite(12, 1);
             digitalWrite(26, 1);
@@ -288,23 +289,27 @@ void distance_sensor_run()
 
             delay(200);
 
-            analogWrite(13, 255);
+            analogWrite(13, 200);
             analogWrite(25,80);
 
             digitalWrite(12, 0);
             digitalWrite(26, 0);
             digitalWrite(14, 1);
             digitalWrite(27, 1);
+
+            delay(200);
         }
     } else {
         // go forward
-        analogWrite(13, 100);
-        analogWrite(25, 100);
+        analogWrite(13, 80);
+        analogWrite(25, 80);
 
         digitalWrite(12, 0);
         digitalWrite(26, 0);
         digitalWrite(14, 1);
         digitalWrite(27, 1);
+
+        delay(400);
     }
 }
 
@@ -413,37 +418,37 @@ void loop()
             Serial.print("Y = ");
             Serial.println(Y);
             delay(100);
-            if(Y < -50) {
+            if(Y < -100) {
                 //turn both motors on to move forward
-                analogWrite(13, 255);
-                analogWrite(25, 255);
+                analogWrite(13, 125);
+                analogWrite(25, 125);
 
                 digitalWrite(12, 0);
                 digitalWrite(26, 0);
                 digitalWrite(14, 1);
                 digitalWrite(27, 1);
-            } else if (Y > 50) {
+            } else if (Y > 100) {
                 //turn both motors on backward
-                analogWrite(13, 255);
-                analogWrite(25, 255);
+                analogWrite(13, 125);
+                analogWrite(25, 125);
 
                 digitalWrite(12, 1);
                 digitalWrite(26, 1);
                 digitalWrite(14, 0);
                 digitalWrite(27, 0);
-            } else if(X > 50) {
+            } else if(X > 100) {
                 //turn left motor on faster than the right one (to turn right)
                 analogWrite(13,100);
-                analogWrite(25,255);
+                analogWrite(25,175);
 
                 digitalWrite(12, 0);
                 digitalWrite(26, 0);
                 digitalWrite(14, 1);
                 digitalWrite(27, 1);
-            } else if (X < -50)
+            } else if (X < -100)
             {
                 //turn right motor on faster than the left one (to turn left)
-                analogWrite(13, 255);
+                analogWrite(13, 175);
                 analogWrite(25,100);
 
                 digitalWrite(12, 0);
